@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import "../index.css"; // Adjust the path if needed
 import jsonValidationSchema from "./jsonValidationSchema";
 import { Field } from "@headlessui/react";
+import { initialJsonSchema } from "./initialJsonSchema";
 
 const JsonValidator: React.FC = () => {
-  const [jsonInput, setJsonInput] = useState<string>(""); // To hold the raw JSON input
+  const [jsonInput, setJsonInput] = useState<string>(initialJsonSchema); // To hold the raw JSON input
   const [formSchema, setFormSchema] = useState<any | null>(null); // Parsed and validated JSON schema
   const [errors, setErrors] = useState<string>(""); // Validation errors
   const [formData, setFormData] = useState<Record<string, any>>({}); // Form data
@@ -17,16 +18,15 @@ const JsonValidator: React.FC = () => {
   const validateJson = ajv.compile(jsonValidationSchema);
 
   // Handle JSON input change and validation
-  const handleJsonInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const input = e.target.value;
-    setJsonInput(input);
-    if (input.trim() === "") {
+  useEffect(() => {
+    if (jsonInput.trim() === "") {
       setErrors(""); // Reset errors when input is empty
       setFormSchema(null); // Optionally clear form schema
       return;
     }
+
     try {
-      const parsedJson = JSON.parse(input);
+      const parsedJson = JSON.parse(jsonInput);
 
       if (validateJson(parsedJson)) {
         setErrors("");
@@ -46,6 +46,11 @@ const JsonValidator: React.FC = () => {
       }
       setFormSchema(null);
     }
+  }, [jsonInput, validateJson]);
+
+  // Handle JSON input change
+  const handleJsonInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setJsonInput(e.target.value);
   };
 
   // Handle form field changes
